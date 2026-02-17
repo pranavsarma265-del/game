@@ -1,0 +1,146 @@
+from flask import Flask, render_template_string, request, jsonify
+
+app = Flask(__name__)
+scores = []
+
+@app.route("/")
+def home():
+    return render_template_string("""
+<!DOCTYPE html>
+<html>
+<head>
+<title>🎤 Voice Recognition Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at top,#1f1c2c,#928dab);
+    color:white;
+    text-align:center;
+    overflow:hidden;
+}
+
+h1{
+    margin-top:20px;
+    font-size:40px;
+}
+
+#gameBox{
+    margin:50px auto;
+    width:500px;
+    padding:30px;
+    border-radius:20px;
+    backdrop-filter:blur(15px);
+    background:rgba(255,255,255,0.1);
+    box-shadow:0 0 30px rgba(0,0,0,0.4);
+}
+
+#word{
+    font-size:50px;
+    margin:20px 0;
+    color:#00ffcc;
+    animation:pulse 1s infinite;
+}
+
+#score{
+    font-size:25px;
+}
+
+button{
+    padding:12px 25px;
+    font-size:18px;
+    border:none;
+    border-radius:10px;
+    background:#00ffcc;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#00ccaa;
+    transform:scale(1.1);
+}
+
+@keyframes pulse{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.2);}
+    100%{transform:scale(1);}
+}
+
+/* Animated background circles */
+.circle{
+    position:absolute;
+    border-radius:50%;
+    background:rgba(255,255,255,0.1);
+    animation:float 10s infinite linear;
+}
+
+@keyframes float{
+    from{transform:translateY(100vh);}
+    to{transform:translateY(-10vh);}
+}
+</style>
+</head>
+<body>
+
+<h1>🎤 Voice Command Game</h1>
+
+<div id="gameBox">
+    <div id="word">START</div>
+    <div id="score">Score: 0</div>
+    <br>
+    <button onclick="startGame()">Start Game</button>
+</div>
+
+<script>
+let words = ["red","blue","green","yellow","cat","dog","apple"];
+let currentWord = "";
+let score = 0;
+
+function randomWord(){
+    currentWord = words[Math.floor(Math.random()*words.length)];
+    document.getElementById("word").innerText = currentWord.toUpperCase();
+}
+
+function startGame(){
+    score = 0;
+    randomWord();
+    startVoice();
+}
+
+function startVoice(){
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.start();
+
+    recognition.onresult = function(event){
+        let speech = event.results[event.results.length-1][0].transcript.toLowerCase();
+
+        if(speech.includes(currentWord)){
+            score++;
+            document.getElementById("score").innerText = "Score: " + score;
+            randomWord();
+        }
+    };
+}
+
+// Floating background animation
+for(let i=0;i<15;i++){
+    let circle=document.createElement("div");
+    circle.classList.add("circle");
+    circle.style.width=Math.random()*100+"px";
+    circle.style.height=circle.style.width;
+    circle.style.left=Math.random()*100+"vw";
+    circle.style.animationDuration=(5+Math.random()*10)+"s";
+    document.body.appendChild(circle);
+}
+</script>
+
+</body>
+</html>
+""")
+
+if __name__ == "__main__":
+    app.run(debug=True)
